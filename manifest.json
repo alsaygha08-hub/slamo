@@ -1,0 +1,9 @@
+{
+  "name": "English 3 Speaking Milestone 3 (Offline)",
+  "short_name": "E3 SM3",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#1f2937",
+  "icons": []
+}
