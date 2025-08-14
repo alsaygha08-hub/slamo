@@ -1,36 +1,315 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<title>English 3 Speaking Milestone 3</title>
-<script src="jquery-3.6.4.min.js"></script>
-<script src="jquery-ui.min.js"></script>
-<script src="jquery.ui.touch-punch.min.js"></script>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>English 3 Speaking Milestone 3</title>
 
-<style>
-/* نفس التنسيقات الأصلية */
-</style>
+  <!-- لا نربط favicon لتفادي 404 على GitHub Pages -->
+  <!-- <link rel="icon" href="data:,"> -->
 
-<script>
-window.sounds = [];
-window.promptBank = [];
-window.counter = 0;
+  <!-- مكتبات محلية (تأكد أنها موجودة بجانب index.html) -->
+  <script src="jquery-3.6.4.min.js"></script>
+  <script src="jquery-ui.min.js"></script>
+  <script src="jquery.ui.touch-punch.min.js"></script>
 
-const targetFunctions = [
-  { func: "TALKING_ABOUT_RULES", subs: ["TRY_IT_1", "TRY_IT_2"] },
-  { func: "MAKING_ACCEPTING_AND_REFUSING_OFFERS", subs: ["TRY_IT_1", "TRY_IT_2"] },
-  { func: "TALKING_ABOUT_WILLINGNESS", subs: ["TRY_IT_1", "TRY_IT_2"] },
-  { func: "INVITING_AND_HANDLING_QUESTIONS", subs: ["TRY_IT_1"] },
-  { func: "ASKING_FOR_OFFERING_AND_PROVIDING_CLARIFICATION", subs: ["TRY_IT_1", "TRY_IT_2"] },
-  { func: "TALKING_ABOUT_REQUIREMENTS_AND_NECESSITIES", subs: ["TRY_IT_1", "TRY_IT_2"] },
-  { func: "TALKING_ABOUT_MISTAKES", subs: ["TRY_IT_1"] },
-  { func: "TALKING_ABOUT_ABBREVIATIONS", subs: ["TRY_IT_1", "TRY_IT_2"] },
-  { func: "ASSIGNING_TASKS", subs: ["TRY_IT_1", "TRY_IT_2"] },
-  { func: "TALKING_ABOUT_ROLES_AND_RESPONSIBILITIES", subs: ["TRY_IT_1", "TRY_IT_2"] },
-  { func: "TALKING_ABOUT_PURPOSE_AND_FUNCTION", subs: ["TRY_IT_1", "TRY_IT_2"] },
-  { func: "TALKING_ABOUT_RANGE_AND_DURATION", subs: ["TRY_IT_1", "TRY_IT_2"] }
-];
+  <style>
+    body{margin:0}
+    #cont{ text-align:center; height:95vh; width:95vw; overflow:auto; margin:auto;}
+    .promptHolder{
+      background:#f7f7f7;border:2px solid #EBEBEB;color:#468283;
+      font-size:calc(1.75vw + 1.75vh); width:90%; border-radius:10px;
+      margin:auto; font-family:'Trebuchet MS','Lucida Sans Unicode','Lucida Grande','Lucida Sans',Arial,sans-serif;
+      justify-content:center; align-items:center; padding:1em;
+    }
+    #pageHead{color:#468283;font-family:'Trebuchet MS','Lucida Sans Unicode','Lucida Grande','Lucida Sans',Arial,sans-serif}
+    #overlay{
+      position:fixed; inset:0; background:rgba(255,255,255,.85);
+      display:flex; align-items:center; justify-content:center; z-index:1000;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      text-align:center; padding:16px;
+    }
+    .butt{
+      background:#84BD00; color:#fff; border-radius:6px; width:120px;
+      left:50%; transform:translateX(-50%); padding:12px; text-align:center;
+      font-family:'Trebuchet MS','Lucida Sans Unicode','Lucida Grande','Lucida Sans',Arial,sans-serif;
+      font-size:1.25em; box-shadow:0 2px 5px rgba(0,0,0,.3); position:fixed; bottom:20px; cursor:pointer;
+    }
+    .butt:active{transform:translateX(-50%) scale(.97); box-shadow:0 2px 4px rgba(0,0,0,.3)}
+    .pCount{width:93vw;text-align:center;font-family:'Trebuchet MS','Lucida Sans Unicode','Lucida Grande','Lucida Sans',Arial,sans-serif}
+    .zoom{position:fixed; inset:0; background:rgba(255,255,255,.95); z-index:999}
+    #image_holder{width:90%; justify-content:center; cursor:pointer; display:none; margin:auto; overflow:visible}
+    #promptPic{display:block; margin:10px auto; max-width:250px; max-height:150px; box-shadow:0 2px 2px rgba(0,0,0,.3); cursor:pointer}
+    #closeX{position:absolute; right:2%; display:none; background:#000; color:#fff; border-radius:20px; padding:5px 8px; font:bold 14px arial; cursor:pointer}
+    @media (max-width:750px){ .promptHolder{font-size:2em;width:85%} .pCount{width:85%; padding-left:5rem} }
+    @media (max-width:500px){ .pCount{padding-left:3rem} #promptPic{max-width:150px} }
+    .hint{font-size:14px; color:#555; margin-top:10px}
+  </style>
+</head>
+<body>
 
-const resources_bb_url = "https://aramco.blackboard.com/bbcswebdav/orgs/PEC/COMMON/TRY_IT/E3M/";
+  <!-- شاشة تحميل + Unlock للصوت على iOS -->
+  <div id="overlay">
+    <div>
+      <div style="font-size:20px; margin-bottom:8px">Loading…</div>
+      <div class="hint">إذا طال التحميل: اضغط “Enable Audio & Start” لتفعيل الصوت على iOS.</div>
+      <div id="unlockBtn" class="butt" style="position:static; width:auto; margin:16px auto 0; transform:none;">Enable Audio & Start</div>
+      <div id="fallbackMsg" class="hint" style="display:none; max-width:520px; margin:10px auto 0">
+        يبدو أن تحميل الأسئلة عن بُعد ممنوع (CORS). سنستعمل النسخة المحلية إذا كانت موجودة.<br/>
+        تأكد من وجود ملف <b>prompts_local.js</b> بجانب هذه الصفحة.
+      </div>
+    </div>
+  </div>
 
-window.shuffle = funct
+  <div id="cont" hidden>
+    <h1 id="pageHead" style="display:none;">English 3 Speaking Milestone 3</h1>
+    <div id="pCount" class="pCount" style="display:none">
+      <div style="margin-left:auto; margin-right:0; margin-bottom:5px; width:75px; padding:5px; border-radius:7px;">
+        <span id="pno" style="font-size:1.25em"></span><span id="pto"></span>
+      </div>
+    </div>
+
+    <div class="promptHolder" id="promptHolder">
+      <h2 class="iHead" style="font-size:2rem; margin:0 0 1.5rem 0">English 3 Speaking Milestone 3</h2>
+      <div class="iText" style="font-size:1.5rem; font-weight:500; margin-top:.5rem">
+        <span style="font-weight:bold">This assessment covers these functions:</span>
+      </div>
+      <div class="iText" style="display:flex; justify-content:center; margin-left:auto; font-size:1.5rem;">
+        <ul style="text-align:left;">
+          <li>Talking about rules</li><li>Making, accepting, and refusing offers</li>
+          <li>Talking about willingness</li><li>Inviting and handling questions</li>
+          <li>Asking for, offering, and providing clarification</li><li>Talking about requirements</li>
+          <li>Talking about mistakes</li><li>Talking about abbreviations</li>
+          <li>Assigning tasks</li><li>Talking about responsibilities</li>
+          <li>Talking about purpose and function</li><li>Talking about range and duration</li>
+        </ul>
+      </div>
+    </div>
+
+    <div id="image_holder" style="display:none; position:relative">
+      <span id="closeX" onclick="closeImg()">X</span>
+      <img id="promptPic" src="" onclick="enlarge()">
+      <p id="cap" style="text-align:center; font-family:'Trebuchet MS'">Tap to enlarge</p>
+    </div>
+
+    <div style="margin-top:2em">
+      <div class="butt" id="butt"  onclick="introPage()">Continue</div>
+      <div class="butt" id="butt1" style="display:none" onclick="landingPage()">OK</div>
+      <div class="butt" id="butt2" style="display:none" onclick="startActivity()">Start</div>
+      <div class="butt" id="butt3" style="display:none" onclick="startOver()">Restart</div>
+    </div>
+  </div>
+
+  <script>
+  // ---------- متغيرات عامة ----------
+  const resources_bb_url = "https://aramco.blackboard.com/bbcswebdav/orgs/PEC/COMMON/TRY_IT/E3M/";
+  let promptBank = [];      // قائمة الأسئلة النهائية
+  let audioElements = [];   // مقاطع الصوت لكل سؤال
+  let sounds = [];          // مسارات الصوت
+  let counter = 0;
+
+  // ملفات المقدمة/النهاية (محلية)
+  const badge   = new Audio("E3_SM3_Intro.mp3");
+  const instr   = new Audio("E3_4_SM3_Inst.mp3");
+  const endBlurb= new Audio("E3_E4_End.mp3");
+
+  // ---------- أدوات الصوت: تشغيل نظيف + تهيئة مسبقة ----------
+  function whenReady(a){ return new Promise(res=>{ a.readyState>=2 ? res() : a.addEventListener('canplay', res, {once:true}); }); }
+  async function playClean(a){
+    try{
+      a.preload='auto'; a.pause(); a.currentTime=0; a.load();
+      await whenReady(a);
+      await new Promise(r=>setTimeout(r,40)); // مهلة قصيرة لمنع قصّ البداية
+      await a.play();
+    }catch(_){/* iOS قد يرفض قبل تفاعل المستخدم */}
+  }
+  function primeAudios(list){ (list||[]).forEach(a=>{ try{ a.preload='auto'; a.load(); }catch(_){} }); }
+
+  // ---------- زر تمكين الصوت (iOS) ----------
+  document.getElementById('unlockBtn').addEventListener('click', async ()=>{
+    try{
+      await badge.play(); badge.pause(); badge.currentTime=0;
+      await instr.play(); instr.pause(); instr.currentTime=0;
+      await endBlurb.play(); endBlurb.pause(); endBlurb.currentTime=0;
+    }catch(_){}
+    document.getElementById('overlay').style.display='none';
+    document.getElementById('cont').hidden=false;
+  }, {once:true});
+
+  // ---------- شَفل بسيط ----------
+  function shuffle(arr){let i=arr.length,t,r;while(i){r=Math.floor(Math.random()*i--);t=arr[i];arr[i]=arr[r];arr[r]=t;}return arr;}
+
+  // ---------- واجهة التنقل ----------
+  window.introPage = function(){
+    $("#butt").hide();
+    $("#promptHolder").html(`<h2 class="iHead" style="font-size:2rem">English 3 Speaking Milestone 3</h2>
+      <div class="iText" style="font-size:1.5rem; font-weight:500; margin-top:8vh">
+        <p style="line-height:2rem;">Please say your name and badge number.</p><p>Tap OK to proceed.</p>
+      </div>`);
+    $("#butt1").fadeIn(300);
+    playClean(badge);
+  }
+  window.landingPage = function(){
+    badge.pause();
+    $("#butt1").hide();
+    $("#promptHolder").html(`<h2 class="iHead" style="font-size:2rem">English 3 Speaking Milestone 3</h2>
+      <div class="iText" style="font-size:1.5rem; font-weight:500; margin-top:8vh; line-height:1.5rem">
+        <p>You will see and hear 12 random prompts from modules 17 to 28 of this course.</p>
+        <p>After you hear each prompt, you should respond.</p>
+        <p>If you see a picture with your prompt, you can tap the picture to make it bigger.</p>
+        <p>After you respond, tap the “Next” button to move to the next prompt.</p>
+        <p>When you are ready, tap the “Start” button to begin.</p>
+      </div>`);
+    $("#butt2").fadeIn(300);
+    playClean(instr);
+  }
+  window.startActivity = function(){
+    instr.pause();
+    $("#butt2").hide();
+    $("#pageHead").show();
+    $("#butt2").text("Next");
+    document.getElementById('image_holder').style.display="none";
+    counter++;
+
+    if(counter>promptBank.length){
+      $("#promptHolder").text("You have finished.");
+      $("#pCount").hide();
+      $("#butt2").hide();
+      $("#butt3").fadeIn(200);
+      endBlurb.play();
+    }else{
+      $("#pCount").show();
+      $("#promptHolder").text(promptBank[counter-1].text);
+      playClean(audioElements[counter-1]);
+      $("#pno").text(counter+" / ");
+      if(promptBank[counter-1].image){
+        document.getElementById('image_holder').style.display="block";
+        document.getElementById('promptPic').src = promptBank[counter-1].image;
+      }else{
+        document.getElementById('image_holder').style.display="none";
+      }
+    }
+  }
+  window.enlarge = function(){
+    $("#image_holder").addClass('zoom');
+    const img=document.getElementById('promptPic');
+    img.style.maxWidth="80vw"; img.style.maxHeight="75vh";
+    document.getElementById('cap').style.backgroundColor="#fff";
+    document.getElementById('cap').style.fontSize="1.1rem";
+    document.getElementById('cap').innerText = document.getElementById('promptHolder').innerText;
+    document.getElementById('closeX').style.display="block";
+  }
+  window.closeImg = function(){
+    $("#cap").text("Tap to enlarge"); document.getElementById('cap').style.fontSize="1rem";
+    $('#image_holder').removeClass('zoom');
+    document.getElementById('promptPic').style.maxWidth="250px";
+    document.getElementById('closeX').style.display="none";
+  }
+  window.startOver = function(){ location.reload(); }
+
+  // ---------- محاولة استخدام أسئلة محلية أولاً ----------
+  async function useLocalPromptsIfAvailable(){
+    return new Promise(resolve=>{
+      const s=document.createElement('script');
+      s.src='prompts_local.js'; // يجب أن يعرّف window.PROMPTS_LOCAL = [...];
+      s.onload=()=>{
+        if(Array.isArray(window.PROMPTS_LOCAL) && window.PROMPTS_LOCAL.length){
+          promptBank = window.PROMPTS_LOCAL.slice(0); // نسخ
+          finalizePrompts(true);
+          resolve(true);
+        }else{
+          resolve(false);
+        }
+      };
+      s.onerror=()=>resolve(false);
+      document.head.appendChild(s);
+    });
+  }
+
+  // ---------- تحميل من Blackboard (قد يُمنَع بسبب CORS) ----------
+  const targetFunctions = [
+    {func:"TALKING_ABOUT_RULES",subs:["TRY_IT_1","TRY_IT_2"]},
+    {func:"MAKING_ACCEPTING_AND_REFUSING_OFFERS",subs:["TRY_IT_1","TRY_IT_2"]},
+    {func:"TALKING_ABOUT_WILLINGNESS",subs:["TRY_IT_1","TRY_IT_2"]},
+    {func:"INVITING_AND_HANDLING_QUESTIONS",subs:["TRY_IT_1"]},
+    {func:"ASKING_FOR_OFFERING_AND_PROVIDING_CLARIFICATION",subs:["TRY_IT_1","TRY_IT_2"]},
+    {func:"TALKING_ABOUT_REQUIREMENTS_AND_NECESSITIES",subs:["TRY_IT_1","TRY_IT_2"]},
+    {func:"TALKING_ABOUT_MISTAKES",subs:["TRY_IT_1"]},
+    {func:"TALKING_ABOUT_ABBREVIATIONS",subs:["TRY_IT_1","TRY_IT_2"]},
+    {func:"ASSIGNING_TASKS",subs:["TRY_IT_1","TRY_IT_2"]},
+    {func:"TALKING_ABOUT_ROLES_AND_RESPONSIBILITIES",subs:["TRY_IT_1","TRY_IT_2"]},
+    {func:"TALKING_ABOUT_PURPOSE_AND_FUNCTION",subs:["TRY_IT_1","TRY_IT_2"]},
+    {func:"TALKING_ABOUT_RANGE_AND_DURATION",subs:["TRY_IT_1","TRY_IT_2"]}
+  ];
+  function getPrompts(item){
+    return new Promise((resolve,reject)=>{
+      const script=document.createElement('script');
+      const sub = item.subs.length>1 ? Math.floor(Math.random()*item.subs.length) : 0;
+      const base = `${resources_bb_url}${item.func}/${item.subs[sub]}/`;
+      script.src = base + 'prompts.js';
+      script.onload=()=>{
+        const loaded = window.prompts || [];
+        for(let p of loaded){
+          if(p.audio) p.audio = base + p.audio;
+          if(p.image) p.image = base + p.image;
+        }
+        resolve(loaded);
+      };
+      script.onerror=()=>reject(new Error('CORS or load error: '+script.src));
+      document.head.appendChild(script);
+    });
+  }
+  async function loadRemotePrompts(){
+    const promises = targetFunctions.map(getPrompts);
+    const blocks = await Promise.all(promises);
+    promptBank = [];
+    blocks.forEach(arr=>{ shuffle(arr); promptBank.push(arr[0]); });
+    finalizePrompts(false);
+  }
+
+  // ---------- إنهاء التحضير (صوت/عداد/إخفاء overlay) ----------
+  function finalizePrompts(isLocal){
+    shuffle(promptBank);
+    sounds = promptBank.map(p=>p.audio + (p.audio.endsWith('.mp3')?'':'.mp3'));
+    audioElements = sounds.map(src=>{
+      const a=new Audio(src);
+      a.onended=()=>$('#butt2').fadeIn(150);
+      return a;
+    });
+    // تهيئة مسبقة لمنع قص البداية
+    primeAudios([badge,instr,endBlurb,...audioElements]);
+
+    // عرض الصفحة
+    document.getElementById('overlay').style.display='none';
+    document.getElementById('cont').hidden=false;
+    $("#pCount").hide();
+    $("#pto").text(promptBank.length);
+
+    // لو محلي: لا صور خارجية
+    if(isLocal){
+      promptBank = promptBank.map(p=>({text:p.text, audio:p.audio, image:p.image||''}));
+    }
+  }
+
+  // ---------- خط iniz ----------
+  (async function init(){
+    // حاول محلي أولاً
+    const okLocal = await useLocalPromptsIfAvailable();
+    if(okLocal) return;
+
+    // لو فشل المحلي: جرّب عن بُعد
+    try{
+      await loadRemotePrompts();
+    }catch(e){
+      // ممنوع CORS أو فشل التحميل — لا نعلّق
+      document.getElementById('fallbackMsg').style.display='block';
+      // نظهر الصفحة ونسمح بالبدء لتجربة المقدمة/التعليمات فقط
+      document.getElementById('overlay').style.display='none';
+      document.getElementById('cont').hidden=false;
+      $("#butt").show();
+    }
+  })();
+  </script>
+</body>
+</html>
